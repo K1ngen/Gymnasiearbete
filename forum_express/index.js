@@ -16,7 +16,7 @@ const cors = require("cors");
 
 app.use(cors({
  credentials : true,
- origin : "http://127.0.0.1:3000"
+ origin : "http://localhost:5173"
 }))
 
 app.use(express.json());
@@ -33,7 +33,7 @@ app.post('/test/signup', (req,res) =>{
         bcrypt.hash(req.body.password, salt, (err, hash) =>{
             // Din databas query här, INSERT INTO 
             db.query(
-                `INSERT INTO accounts (username, password, bio, email) VALUES ("${req.body.username}", "${hash}", "${req.body.bio}", "${req.body.email}" )`,
+                `INSERT INTO accounts (username, password) VALUES ("${req.body.username}", "${hash}")`,
                 function(err, results){
                     if(!err){
                         res.status(200).json({message: "User created sucessfully."})
@@ -49,17 +49,21 @@ app.post('/test/signup', (req,res) =>{
 })
 
 //post method for login 
-app.post('/test/login', (req) => {
-        //query selecting the password that is being writen.
+app.post('/test/login', (req, res) => {
+         //query selecting the password that is being writen.
         db.query(` SELECT password FROM accounts WHERE username = "${req.body.username}"`,
-            function(err, results){
-                bcrypt.compare(req.body.password, results[0].password.toString(), (err, match)=>{
-                    if(match){
-                       console.log('user succesfully logged in'); 
-                    } else {
-                       console.log('incorrect passowrd');
-                    }
-                })
+            function(err, result){
+                if(result.length > 0) {
+                    bcrypt.compare(req.body.password, result[0].password.toString(), (err, match)=>{
+                        if(match){
+                           console.log('user succesfully logged in'); 
+                           res.status(200).json({message: "User sucessfully logged in"});
+                        } else {
+                           console.log('wrong username or password'); 
+                           res.status(400).json({message: "the password or username is wrong"});  
+                        }
+                    })
+                } 
         });  
 });
 
