@@ -140,5 +140,40 @@ app.delete("/test/delete/:user", (req, res) =>{
       }
     ) 
 })
+
+
+//post method for commenting
+app.post('/comments', (req,res) =>{
+    const saltrounds = 10;
+        //query for insering comments value into table comment
+          db.query(
+                `INSERT INTO comments (content) VALUES ("${req.body.content}")`,
+                function(err, results){
+                    if(!err){
+                        res.status(200).json({message: "Comment created sucessfully."})
+                    }
+                    else{
+                        console.log('the comment was not created ' + err);
+                        res.status(400).json({error:err.sqlMessage})
+                    }
+                }
+            )
+})
+
+app.get('/posts', (req, res) =>{
+    db.query(
+        `SELECT content FROM posts`,
+        function(err, results){
+            if(err){
+                res.status(400).json({error:err.sqlMessage})
+            }
+            else{
+                res.status(200).json(results)
+            }
+        }
+    )
+})   
   
+    
+
 app.listen(PORT, () => console.log("App listening on 8000"))
