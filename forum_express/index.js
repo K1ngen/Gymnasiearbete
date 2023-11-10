@@ -74,7 +74,7 @@ app.post('/post-sign-in', (req,res) =>{
 //post method for login 
 app.post('/test/login', (req, res) => {
     db.query(
-        `SELECT username, password FROM accounts WHERE username="${req.body.username}"`,
+        `SELECT username, password, account_id FROM accounts WHERE username="${req.body.username}"`,
         function(err, result){
             if(err){
                 console.log(err)
@@ -87,8 +87,9 @@ app.post('/test/login', (req, res) => {
                 bcrypt.compare(req.body.password, result[0].password.toString(), (err, match) => {
                     if(match){
                         const sess_id = crypto.randomBytes(32).toString('base64');
+                        console.log(result)
                         db.query(
-                            `INSERT INTO sessions (session_id, username) VALUES ("${sess_id}", "${req.body.username}")`,
+                            `INSERT INTO sessions (session_id, username, account_id) VALUES ("${sess_id}", "${req.body.username}", ${result[0].account_id})`,
                             function(err){
                                 if(err){
                                     throw err;
