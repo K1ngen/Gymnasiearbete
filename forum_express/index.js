@@ -115,10 +115,34 @@ app.post('/test/login', (req, res) => {
     ) 
 });
 
+// Block a User
+app.post('/blockUser', (req, res) => {
+    const userId = req.body.userId;
+    const blockedUserId = req.body.blockedUserId;
+  
+    const blockUserQuery = `INSERT INTO blocked_users (blocking_user_id, blocked_user_id) VALUES ("${userId}", "${blockedUserId}")`;
+    db.query(blockUserQuery, [userId, blockedUserId], (err) => {
+      if (err) {
+        console.error('Error blocking user: ', err);
+        res.status(500).json({ error: 'Internal Server Error' });
+      } else {
+        res.status(200).json({ success: true, message: 'User blocked successfully' });
+      }
+    });
+});
+
 app.post('/post', (req,res) =>{
     const saltrounds = 10;
         //query for inserting the posts value into table posts
-        db.query(
+        try{
+            const token = jwt.verify(req.cookies["token"],secret2)
+            console.log(token)
+        }
+        catch(err){
+            res.status(400).json({error: err})
+            return
+        }
+            db.query(
                 `INSERT INTO posts (content) VALUES ("${req.body.content}")`,
                 function(err, results){
                     if(!err){
@@ -128,33 +152,148 @@ app.post('/post', (req,res) =>{
                         console.log(err);
                         res.status(400).json({error:err.sqlMessage})
                     }
-        }
-     )
+            })
 })
 
-//post method for commenting
-app.post('/comments', (req,res) =>{
-    const saltrounds = 10;
-        //query for insering comments value into table comment
-          db.query(
-                `INSERT INTO comments (content) VALUES ("${req.body.content}")`,
-                function(err, results){
-                    if(!err){
-                        res.status(200).json({message: "Comment created sucessfully."})
-                    }
-                    else{
-                        console.log('the comment was not created ' + err);
-                        res.status(400).json({error:err.sqlMessage})
-                    }
+
+app.post('/addComment', (req, res) => {
+    const postId = req.body.postId;
+    const commentText = req.body.commentText;
+    try{
+        const token = jwt.verify(req.cookies["token"],secret2)
+        console.log(token)
+    }
+    catch(err){
+        res.status(400).json({error: err})
+        return
+    }
+        // Check if the post exists
+    const checkPostQuery = 'SELECT * FROM posts WHERE post_id = ?';
+    db.query(checkPostQuery, [postId], (err, results) => {
+        if (err) {
+        console.error('Error checking post existence: ', err);
+        res.status(500).json({ error: 'Internal Server Error' });
+        } else {
+        if (results.length === 0) {
+            // Post doesn't exist
+            res.status(404).json({ error: 'Post not found' });
+        } else {
+            // Post exists, add comment
+            const addCommentQuery = 'INSERT INTO comments (post_id, content) VALUES (?, ?)';
+            db.query(addCommentQuery, [postId, commentText], (err) => {
+            if (err) {
+                console.error('Error adding comment: ', err);
+                res.status(500).json({ error: 'Internal Server Error' });
+            } else {
+                res.status(200).json({ success: true, message: 'Comment added successfully' });
+            }
+            });
+        }
+        }
+    });
+  });
+  
+  // Route to handle liking or disliking a post
+app.post('/like_post', (req, res) => {
+        try{
+            const token = jwt.verify(req.cookies["token"],secret2)
+            console.log(token)
+        }
+        catch(err){
+            res.status(400).json({error: err})
+        }
+            // Check if the post exists
+        const { post_id, action } = req.body;
+
+        if (!post_id|| !['like', 'dislike'].includes(action)) {
+            return res.status(400).json({ error: 'Invalid request' });
+        }
+        
+
+        db.query('SELECT * FROM posts WHERE post_id = ?', [post_id], (err, results) => {
+         if (err) {
+            console.error('Error querying the database:', err);
+            return res.status(500).json({ error: 'Internal server error' });
+         }
+
+         if (results.length === 0) {
+            return res.status(404).json({ error: 'Comment not found' });
+         }
+
+         const post = results[0];
+
+         // Update likes or dislikes based on the action
+         if (action === 'like') {
+            post.likes += 1;
+         } else if (action === 'dislike') {
+            post.dislikes += 1;
+         }
+
+        // Update the posts in the database
+        db.query('UPDATE posts SET likes = ?, dislikes = ? WHERE post_id = ?',
+            [post.likes, post.dislikes, post.post_id],
+            (err) => {
+                if (err) {
+                    console.error('Error updating the comment:', err);
+                    return res.status(500).json({ error: 'Internal server error' });
                 }
-            )
-})
+
+                return res.json({ success: true, post });
+            }
+          );
+         }); 
+});
+
+
+
+// Route to handle liking or disliking a comment
+app.post('/like_dislike', (req, res) => {
+    const { comment_id, action } = req.body;
+
+    if (!comment_id || !['like', 'dislike'].includes(action)) {
+        return res.status(400).json({ error: 'Invalid request' });
+    }
+
+    // Check if the comment exists
+    db.query('SELECT * FROM comments WHERE comment_id = ?', [comment_id], (err, results) => {
+        if (err) {
+            console.error('Error querying the database:', err);
+            return res.status(500).json({ error: 'Internal server error' });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ error: 'Comment not found' });
+        }
+
+        const comment = results[0];
+
+        // Update likes or dislikes based on the action
+        if (action === 'like') {
+            comment.likes += 1;
+        } else if (action === 'dislike') {
+            comment.dislikes += 1;
+        }
+
+        // Update the comment in the database
+        db.query('UPDATE comments SET likes = ?, dislikes = ? WHERE comment_id = ?',
+            [comment.likes, comment.dislikes, comment.comment_id],
+            (err) => {
+                if (err) {
+                    console.error('Error updating the comment:', err);
+                    return res.status(500).json({ error: 'Internal server error' });
+                }
+
+                return res.json({ success: true, comment });
+            }
+        );
+    });
+});
 
 //post geting a users username, bio, email and when the acccount was created
-app.get('/test/users/:user', (req, res) =>{
+app.get('/users/:user', (req, res) =>{
     console.log(req.params.user)
     db.query(
-        `SELECT username, pass FROM accounts WHERE username = "${req.params.user}"`,
+        `SELECT username, password, email FROM accounts WHERE username = "${req.params.user}"`,
         function(err, results){
             if(err){
                 res.status(400).json({error:err.sqlMessage})
@@ -163,15 +302,12 @@ app.get('/test/users/:user', (req, res) =>{
                 res.status(404).json({message: "User not found."})
             }
             else{
-                results[0].pass = results[0].pass.toString();
+                results[0].password = results[0].password.toString();
                 res.status(200).json(results)
             }
         }
     )
 })
-
-    
-  
 
 app.put("/test/change", (req, res) => {
     console.log(req.cookies)
@@ -197,7 +333,7 @@ app.put("/test/change", (req, res) => {
     })
 })
 
-app.delete("/test/delete/:user", (req, res) =>{
+app.delete("delete/:user", (req, res) =>{
     db.query(
         `DELETE FROM accounts WHERE username ="${req.params.user}"`,
         function(err, result){
@@ -218,7 +354,7 @@ app.post('/test/lmao', (req, res) =>{
     res.status(204).send()
 })
 
-app.post("/test/get_user", (req, res) => {
+app.post("/get_user", (req, res) => {
     db.query(
         `SELECT username FROM sessions WHERE session_id = "${req.cookies["session_id"]}"`,
         function(err, results){
@@ -283,54 +419,23 @@ app.post("/test/logout", (req, res) => {
     )
 })
 
-//post method for commenting
-app.post('/comments', (req,res) =>{
-    const saltrounds = 10;
-        //query for insering comments value into table comment
-          db.query(
-                `INSERT INTO comments (content) VALUES ("${req.body.content}")`,
-                function(err, results){
-                    if(!err){
-                        res.status(200).json({message: "Comment created sucessfully."})
-                    }
-                    else{
-                        console.log('the comment was not created ' + err);
-                        res.status(400).json({error:err.sqlMessage})
-                    }
-                }
-            )
-})
+// Endpoint to get posts for a specific user
+app.get('/get-user-posts/', (req, res) => {
+    const userId = req.body.userId
 
-app.post('/post', (req,res) =>{
-    const saltrounds = 10;
-        //query for insering comments value into table comment
-          db.query(
-                `INSERT INTO posts (content) VALUES ("${req.body.content}")`,
-                function(err, results){
-                    if(!err){
-                        res.status(200).json({message: "Comment created sucessfully."})
-                    }
-                    else{
-                        console.log('the comment was not created ' + err);
-                        res.status(400).json({error:err.sqlMessage})
-                    }
-                }
-            )
-})
+    const sql = 'SELECT * FROM posts WHERE account_id = ?';
+    const values = [userId];
 
-app.get('/get_posts', (req, res) =>{
-    db.query(
-        `SELECT content FROM posts`,
-        function(err, results){
-            if(err){
-                res.status(400).json({error:err.sqlMessage})
-            }
-            else{
-                res.status(200).json(results)
-            }
+    db.query(sql, values, (err, results) => {
+        if (err) {
+            console.log('Error fetching user posts:', err);
+            res.status(500).json({ error: 'Error fetching user posts' });
+        } else {
+            console.log('User posts fetched successfully');
+            res.status(200).json(results);
         }
-    )
-})   
+    });
+});
   
     
 
