@@ -30,7 +30,7 @@ const cors = require("cors");
 
 app.use(cors({
  credentials : true,
- origin : "http://localhost:5173"
+ origin : "http://127.0.0.1:5173"
 }))
 
 app.use(express.json());
@@ -89,7 +89,7 @@ app.post('/test/login', (req, res) => {
                         const sess_id = crypto.randomBytes(32).toString('base64');
                         console.log(result)
                         db.query(
-                            `INSERT INTO sessions (session_id, username, account_id) VALUES ("${sess_id}", "${req.body.username}", ${result[0].account_id})`,
+                            `INSERT INTO sessions (session_id, account_id) VALUES ("${sess_id}", ${result[0].account_id})`,
                             function(err){
                                 if(err){
                                     throw err;
@@ -131,8 +131,8 @@ app.post('/blockUser', (req, res) => {
     });
 });
 
-app.post('/post', (req,res) =>{
-    const saltrounds = 10;
+app.post('/post', (req, res) =>{
+    console.log(req.cookies)
         //query for inserting the posts value into table posts
         try{
             const token = jwt.verify(req.cookies["token"],secret2)
@@ -154,6 +154,20 @@ app.post('/post', (req,res) =>{
                     }
             })
 })
+
+// Route to get all posts
+app.get('/get-posts', (req, res) => {
+    const query = 'SELECT * FROM posts';
+  
+    db.query(query, (err, results) => {
+      if (err) {
+        console.error('Error executing MySQL query: ', err);
+        res.status(500).send('Internal Server Error');
+      } else {
+        res.json(results);
+      }
+    });
+  });
 
 
 app.post('/addComment', (req, res) => {
