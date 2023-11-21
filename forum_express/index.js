@@ -9,7 +9,7 @@ const PORT = 8000
 
 const mysql = require("mysql2")
 const db = mysql.createConnection({
-    host: "192.168.1.222", //Förmodligen localhost för dig
+    host: "192.168.1.222", //Förmodligen localhost för dig //10.1.1.222 databas anslunting för jobb hemifrån
     user: "henjoh", //sql username
     password : '1qaz!QAZ2wsx@WSX', //sql password
     database : "henjoh", //sql databasnamnet,
@@ -95,7 +95,12 @@ app.post('/test/login', (req, res) => {
                                     throw err;
                                 }
                                 else{
-                                    const smth = jwt.sign({username : req.body.username}, secret2, {expiresIn : 43200})
+                                    const smth = jwt.sign(
+                                        {
+                                            username : req.body.username,
+                                            account_id: req.body.account_id
+                                        }
+                                        , secret2, {expiresIn : 43200})
                                     res
                                     .cookie("token", smth, {httpOnly: true, maxAge : 12 * 60 * 60 * 1000, sameSite : "lax"})
                                     .cookie("session_id", sess_id, {httpOnly: false, maxAge : 12 * 60 * 60 * 1000, sameSite : "lax"})
@@ -132,18 +137,18 @@ app.post('/blockUser', (req, res) => {
 });
 
 app.post('/post', (req, res) =>{
-    console.log(req.cookies)
         //query for inserting the posts value into table posts
+        let token;
         try{
-            const token = jwt.verify(req.cookies["token"],secret2)
-            console.log(token)
+         token = jwt.verify(req.cookies["token"],secret2)
+         console.log(token)
         }
         catch(err){
             res.status(400).json({error: err})
             return
         }
             db.query(
-                `INSERT INTO posts (content) VALUES ("${req.body.content}")`,
+                `INSERT INTO posts (content, username) VALUES ("${req.body.content}", "${token.username}")`,
                 function(err, results){
                     if(!err){
                         res.status(200).json({message: "Post created sucessfully."})
@@ -215,10 +220,11 @@ app.post('/like_post', (req, res) => {
         }
         catch(err){
             res.status(400).json({error: err})
+            return
         }
             // Check if the post exists
         const { post_id, action } = req.body;
-
+         
         if (!post_id|| !['like', 'dislike'].includes(action)) {
             return res.status(400).json({ error: 'Invalid request' });
         }
@@ -231,7 +237,7 @@ app.post('/like_post', (req, res) => {
          }
 
          if (results.length === 0) {
-            return res.status(404).json({ error: 'Comment not found' });
+            return res.status(404).json({ error: 'Post not found' });
          }
 
          const post = results[0];
@@ -256,51 +262,6 @@ app.post('/like_post', (req, res) => {
             }
           );
          }); 
-});
-
-
-
-// Route to handle liking or disliking a comment
-app.post('/like_dislike', (req, res) => {
-    const { comment_id, action } = req.body;
-
-    if (!comment_id || !['like', 'dislike'].includes(action)) {
-        return res.status(400).json({ error: 'Invalid request' });
-    }
-
-    // Check if the comment exists
-    db.query('SELECT * FROM comments WHERE comment_id = ?', [comment_id], (err, results) => {
-        if (err) {
-            console.error('Error querying the database:', err);
-            return res.status(500).json({ error: 'Internal server error' });
-        }
-
-        if (results.length === 0) {
-            return res.status(404).json({ error: 'Comment not found' });
-        }
-
-        const comment = results[0];
-
-        // Update likes or dislikes based on the action
-        if (action === 'like') {
-            comment.likes += 1;
-        } else if (action === 'dislike') {
-            comment.dislikes += 1;
-        }
-
-        // Update the comment in the database
-        db.query('UPDATE comments SET likes = ?, dislikes = ? WHERE comment_id = ?',
-            [comment.likes, comment.dislikes, comment.comment_id],
-            (err) => {
-                if (err) {
-                    console.error('Error updating the comment:', err);
-                    return res.status(500).json({ error: 'Internal server error' });
-                }
-
-                return res.json({ success: true, comment });
-            }
-        );
-    });
 });
 
 //post geting a users username, bio, email and when the acccount was created
@@ -347,26 +308,31 @@ app.put("/test/change", (req, res) => {
     })
 })
 
-app.delete("delete/:user", (req, res) =>{
+app.delete("/delete/:user", (req, res) =>{
+    try{
+     const token = jwt.verify(req.cookies["token"],secret2)
+     console.log(token)
+    }
+
+    catch(err) {
+     res.status(400).json({error: err})
+     return
+    }
+ 
     db.query(
         `DELETE FROM accounts WHERE username ="${req.params.user}"`,
-        function(err, result){
-            if(err){
-                res.status(400).json({error:err.sqlMessage})
+            function(err, result){
+               console.log(req.params.user)
+               if(err){
+                   res.status(400).json({error:err.sqlMessage})
+                }
+                else{
+                  res.status(200).json({message:"User deleted sucessfully"})
+                }
             }
-            else{
-                res.status(200).json({message:"User deleted sucessfully"})
-            }
-        }
-    )
-})
-
-app.post('/test/lmao', (req, res) =>{
-    console.log(req.cookies["session_id"])
-    const username = sessions[req.cookies["session_id"]]
-    console.log(username)
-    res.status(204).send()
-})
+        )
+    }
+)
 
 app.post("/get_user", (req, res) => {
     db.query(
@@ -393,7 +359,7 @@ app.post("/test/validate", (req,res) => {
 
     // Use parameterized query to prevent SQL injection
     db.query(
-        'SELECT username FROM sessions WHERE session_id = ?',
+        'SELECT username, account_id FROM sessions WHERE session_id = ?',
         [sessionId],
         function (err, results) {
             if (err) {
@@ -406,14 +372,11 @@ app.post("/test/validate", (req,res) => {
                 console.log("test");
                 return res.status(401).clearCookie("session_id").clearCookie("token").send({ message: 'Unauthorized - Invalid session ID' });
             }
-
             console.log("test");
             res.status(204).send();
         }
     );
-
 })
-
 
 app.post("/test/logout", (req, res) => {
     db.query(
@@ -451,6 +414,4 @@ app.get('/get-user-posts/', (req, res) => {
     });
 });
   
-    
-
 app.listen(PORT, () => console.log("App listening on 8000"))
