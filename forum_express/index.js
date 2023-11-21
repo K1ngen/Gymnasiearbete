@@ -212,58 +212,6 @@ app.post('/addComment', (req, res) => {
     });
   });
   
-  // Route to handle liking or disliking a post
-app.post('/like_post', (req, res) => {
-        try{
-            const token = jwt.verify(req.cookies["token"],secret2)
-            console.log(token)
-        }
-        catch(err){
-            res.status(400).json({error: err})
-            return
-        }
-            // Check if the post exists
-        const { post_id, action } = req.body;
-         
-        if (!post_id|| !['like', 'dislike'].includes(action)) {
-            return res.status(400).json({ error: 'Invalid request' });
-        }
-        
-
-        db.query('SELECT * FROM posts WHERE post_id = ?', [post_id], (err, results) => {
-         if (err) {
-            console.error('Error querying the database:', err);
-            return res.status(500).json({ error: 'Internal server error' });
-         }
-
-         if (results.length === 0) {
-            return res.status(404).json({ error: 'Post not found' });
-         }
-
-         const post = results[0];
-
-         // Update likes or dislikes based on the action
-         if (action === 'like') {
-            post.likes += 1;
-         } else if (action === 'dislike') {
-            post.dislikes += 1;
-         }
-
-        // Update the posts in the database
-        db.query('UPDATE posts SET likes = ?, dislikes = ? WHERE post_id = ?',
-            [post.likes, post.dislikes, post.post_id],
-            (err) => {
-                if (err) {
-                    console.error('Error updating the comment:', err);
-                    return res.status(500).json({ error: 'Internal server error' });
-                }
-
-                return res.json({ success: true, post });
-            }
-          );
-         }); 
-});
-
 //post geting a users username, bio, email and when the acccount was created
 app.get('/users/:user', (req, res) =>{
     console.log(req.params.user)
@@ -413,5 +361,95 @@ app.get('/get-user-posts/', (req, res) => {
         }
     });
 });
+
+app.post('/like_post', async (req, res) => {
+    try {
+      const { user_id, post_id, action } = req.body;
+  
+      // Check if the user has already liked the post
+      const hasLiked = await checkLikeStatus(user_id, post_id);
+  
+      if (!hasLiked) {
+        // Update the database with the new like status
+        await updateLikeStatus(user_id, post_id, true);
+  
+        // Insert a new row into user_post_likes
+        await insertLikeStatus(user_id, post_id, true);
+
+        await updatePostLikes(user_id, post_id, true);
+
+  
+        // Your existing logic to handle like and dislike actions
+        // ...
+  
+        res.json({ success: true });
+      } else {
+        res.status(400).json({ error: 'User has already liked the post' });
+      }
+    } catch (error) {
+      console.error('Error liking/disliking post:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
+  
+  // Helper function to check like status
+  async function checkLikeStatus(account_id, post_id) {
+    return new Promise((resolve, reject) => {
+      const query = 'SELECT has_liked FROM user_post_likes WHERE account_id = ? AND post_id = ?';
+      db.query(query, [account_id, post_id], (error, results) => {
+        if (error) {
+          reject(error);
+        } else {
+          if (results.length > 0) {
+            resolve(results[0].has_liked === 1);
+          } else {
+            resolve(false);
+          }
+        }
+      });
+    });
+  }
+  
+  // Helper function to update like status
+  async function updateLikeStatus(account_id, post_id, hasLiked) {
+    return new Promise((resolve, reject) => {
+      const query = 'UPDATE user_post_likes SET has_liked = ? WHERE account_id = ? AND post_id = ?';
+      db.query(query, [hasLiked, account_id, post_id], (error, results) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(results);
+        }
+      });
+    });
+  }
+
+  async function updatePostLikes(post_id, increment) {
+    return new Promise((resolve, reject) => {
+      const incrementOperator = increment ? '+' : '-'; // Increment or decrement
+      const query = `UPDATE posts SET likes = likes ${incrementOperator} 1 WHERE post_id = ?`;
+      db.query(query, [post_id], (error, results) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(results);
+        }
+      });
+    });
+  }
+  
+  // Helper function to insert a new row into user_post_likes
+  async function insertLikeStatus(account_id, post_id, hasLiked) {
+    return new Promise((resolve, reject) => {
+      const query = 'INSERT INTO user_post_likes (account_id, post_id, has_liked) VALUES (?, ?, ?)';
+      db.query(query, [account_id, post_id, hasLiked], (error, results) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(results);
+        }
+      });
+    });
+  }
   
 app.listen(PORT, () => console.log("App listening on 8000"))
