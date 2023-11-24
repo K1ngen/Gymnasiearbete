@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
-import { NavBar } from "../NavBar";
-import { React } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import Cookies from 'js-cookie';
 
 const LikePost = () => {
   const navigate = useNavigate();
@@ -16,36 +15,6 @@ const LikePost = () => {
   // State to track whether the user has already liked the post
   const [hasLiked, setHasLiked] = useState(false);
 
-  useEffect(() => {
-    // Check whether the user has already liked the post
-    const checkLikeStatus = async () => {
-      try {
-        const response = await fetch('http://127.0.0.1:8000/check_like_status', {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            post_id: post.post_id,
-          }),
-        });
-
-        const responseData = await response.json();
-
-        if (response.ok) {
-          setHasLiked(responseData.hasLiked);
-        } else {
-          console.error('Error checking like status:', responseData.error);
-        }
-      } catch (error) {
-        console.error('Error checking like status:', error);
-      }
-    };
-
-    checkLikeStatus();
-  }, [post.post_id]);
-
   // Function to handle like and dislike actions
   const handleLike = async (action) => {
     if (hasLiked) {
@@ -54,6 +23,7 @@ const LikePost = () => {
     }
 
     try {
+      // Check whether the user has already liked the post from the server
       const response = await fetch('http://127.0.0.1:8000/like_post', {
         method: 'POST',
         credentials: 'include',
@@ -61,20 +31,44 @@ const LikePost = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          account_id: document.cookie, // Replace with the actual user ID
           post_id: post.post_id,
-          action: action,
         }),
       });
 
       const responseData = await response.json();
 
       if (response.ok) {
-        // Update the state with the new post data
-        setPost(responseData.post);
-        setHasLiked(true);
-        console.log('Post liked/disliked successfully:', responseData);
+        setHasLiked(responseData.hasLiked);
       } else {
-        console.error('Error liking/disliking post:', responseData.error);
+        console.error('Error checking like status:', responseData.error);
+      }
+
+      // If the user has not liked the post, proceed with the like/dislike action
+      if (!hasLiked) {
+        const likeResponse = await fetch('http://127.0.0.1:8000/like_post', {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            user_id: document.cookie, // Replace with the actual user ID
+            post_id: post.post_id,
+            action: action,
+          }),
+        });
+
+        const likeData = await likeResponse.json();
+
+        if (likeResponse.ok) {
+          // Update the state with the new post data
+          setPost(likeData.post);
+          setHasLiked(true);
+          console.log('Post liked/disliked successfully:', likeData);
+        } else {
+          console.error('Error liking/disliking post:', likeData.error);
+        }
       }
     } catch (error) {
       console.error('Error liking/disliking post:', error);

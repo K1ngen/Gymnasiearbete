@@ -2,8 +2,6 @@ import FetchChange from "./fetch/FetchChange";
 import FetchCreate from "./fetch/FetchCreate";
 import FetchDelete from "./fetch/FetchDelete";
 import FetchLogin from "./fetch/FetchLogin";
-import FetchReadAll from "./fetch/FetchReadAll";
-import FetchReadOne from "./fetch/FetchReadOne";
 import { NavBar } from "./NavBar";
 import { Link } from "react-router-dom";
 import "./fetch/fetch.css"
@@ -18,6 +16,7 @@ export default function FetchAPI(){
        </div> 
        <div className="account">
        <div className="delete-container">
+        <Link to={"/FetchAccount"} className="my-account">My Account</Link>
         <Link className="delete-text" to="/FetchDelete" style={{ textDecoration: "none"}}>Delete your account</Link>
         </div>
        <div className="logout-container">

@@ -195,3 +195,12 @@ pre {
   align-items: center;
   margin-left: 10px;
 }
+
+.comments {
+ display: flex;
+ flex-direction: column;
+}
+
+.get-comment {
+  margin-top: 20px;
+}
