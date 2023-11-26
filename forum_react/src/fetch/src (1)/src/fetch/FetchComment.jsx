@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 
 const CommentForm = ({ postId, onCommentSubmit }) => {
   const [author, setAuthor] = useState('');
+  const [comments, setComments] = useState([]);
   const [content, setContent] = useState('');
+
 
   const handleAuthorChange = (e) => {
     setAuthor(e.target.value);
@@ -16,9 +18,8 @@ const CommentForm = ({ postId, onCommentSubmit }) => {
     e.preventDefault();
 
     // Check if both author and content are provided before submitting
-    if (author && content) {
+    if (content) {
       const newComment = {
-        author: author,
         content: content,
         postId: postId, // Assuming postId is passed as a prop
       };
@@ -49,18 +50,13 @@ const CommentForm = ({ postId, onCommentSubmit }) => {
       }
     } else {
       // Handle the case where either author or content is missing
-      alert('Please provide both author and content.');
+      alert('You need to write in the textfield.');
     }
   };
 
   return (
+    <>
     <form onSubmit={handleSubmit}>
-      <div>
-        <label>
-          Author:
-          <input type="text" value={author} onChange={handleAuthorChange} />
-        </label>
-      </div>
       <div>
         <label>
           Comment:
@@ -70,7 +66,16 @@ const CommentForm = ({ postId, onCommentSubmit }) => {
       <div>
         <button type="submit">Submit Comment</button>
       </div>
+      <div>
+          <h2>Comments</h2>
+          {comments.map((comment, index) => (
+            <div key={index}>
+            <strong>{comment.author}:</strong> {comment.content}
+           </div>
+        ))}
+      </div>  
     </form>
+    </>
   );
 };
 

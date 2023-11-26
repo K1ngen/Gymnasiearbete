@@ -1,6 +1,7 @@
 import FetchChange from "./fetch/FetchChange";
 import FetchCreate from "./fetch/FetchCreate";
 import FetchDelete from "./fetch/FetchDelete";
+import CreatePost from "./fetch/FetchCreatePost";
 import FetchLogin from "./fetch/FetchLogin";
 import { NavBar } from "./NavBar";
 import { Link } from "react-router-dom";

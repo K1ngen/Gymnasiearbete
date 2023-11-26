@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import CommentForm from './FetchComment'; // Assuming you have a CommentForm component
+import CreatePost from './FetchCreatePost';
+import { NavBar } from '../NavBar';
 
 export default function GetContent() {
-  const [data, setData] = useState(null);
-  const [selectedPost, setSelectedPost] = useState(null);
+  const [data, setData] = useState(null);  
+  const [showCreatePost, setShowCreatePost] = useState(false);
   const [showCommentForm, setShowCommentForm] = useState(false);
 
   useEffect(() => {
@@ -44,9 +46,15 @@ export default function GetContent() {
     // You can make a fetch request to your backend API to handle comment submission
   };
 
+  const handleCreatePostClick = () => {
+    setShowCreatePost(true);
+  };
+
   return (
     <div>
+      <NavBar></NavBar>
       {data ? (
+        
         <div className="post-container">
           {data.map((item) => (
             <div className="post" key={item.post_id}>
@@ -57,16 +65,7 @@ export default function GetContent() {
               <p className="likes">Likes: {item.likes}</p>
               <p className="dislikes">Dislikes: {item.dislikes}</p>
               <p className="post_id">{item.post_id}</p>
-              <p className='comments'>Comments:{item.comments}</p>
-
-                <>
-                  <h1 className="make-comment" onClick={handleToggleCommentForm}>
-                    Make a Comment
-                  </h1>
-                  {showCommentForm && (
-                    <CommentForm postId={item.post_id} onCommentSubmit={comment => handleCommentSubmit(item.post_id, comment)} />
-                  )}
-                </>
+              <h1 className='make-comment'>comment</h1>
             </div>
           ))}
         </div>
@@ -74,16 +73,9 @@ export default function GetContent() {
         <p>Loading...</p>
       )}
 
-      {selectedPost && (
-        <div className="post">
-          <h1 className="title">{selectedPost.title}</h1>
-          <p className="content">{selectedPost.content}</p>
-          <p className="likes">{selectedPost.likes}</p>
-          <p className="dislikes">{selectedPost.dislikes}</p>
-          <p className="post_id">{selectedPost.post_id}</p>
-          {/* ... other post details ... */}
-        </div>
-      )}
+      <h1 className='create-post' onClick={handleCreatePostClick}>test</h1>
+   
+      {showCreatePost && <CreatePost />}
 
       {/* ... other components ... */}
     </div>

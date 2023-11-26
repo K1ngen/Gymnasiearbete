@@ -13,7 +13,6 @@ import LogOut from './fetch/src (1)/src/fetch/FetchLogOut.jsx';
 import LikePost from './fetch/src (1)/src/fetch/FetchLike.jsx';
 import FetchAccount from './fetch/src (1)/src/fetch/FetchAccount.jsx';
 import CommentForm from './fetch/src (1)/src/fetch/FetchComment.jsx';
-import GetCommentForm from './fetch/src (1)/src/fetch/FetchGetComments.jsx';
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
   root.render(
@@ -31,7 +30,6 @@ const root = ReactDOM.createRoot(document.getElementById("root"));
           <Route path="/FetchLike" element={< LikePost />} />
           <Route path="/FetchAccount" element={< FetchAccount />} />
           <Route path="/FetchComments" element={< CommentForm />} />
-          <Route path="/FetchGetComments" element={< GetCommentForm />} />
         </Route>
       </Routes>
     </BrowserRouter>
