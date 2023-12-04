@@ -40,27 +40,44 @@ app.use(
     })
 );
 
-//post method for signup
-app.post('/test/signup', (req,res) =>{
+app.post('/test/signup', (req, res) => {
     const saltrounds = 10;
-    bcrypt.genSalt(saltrounds, (err,salt) =>{
-        bcrypt.hash(req.body.password, salt, (err, hash) =>{
-            // Din databas query här, INSERT INTO 
-            db.query(
-                `INSERT INTO accounts (username, password) VALUES ("${req.body.username}", "${hash}")`,
-                function(err, results){
-                    if(!err){
-                        res.status(200).json({message: "User created sucessfully."})
-                    }
-                    else{
-                        console.log(err);
-                        res.status(400).json({error:err.sqlMessage})
-                    }
-                }
-            )
-        })
-    })
-})
+
+    // Check if the username already exists
+    db.query(
+        `SELECT * FROM accounts WHERE username = "${req.body.username}"`,
+        (err, results) => {
+            if (err) {
+                console.log(err);
+                return res.status(500).json({ error: "Internal Server Error" });
+            }
+
+            // If the username already exists, return an error
+            if (results.length > 0) {
+                return res.status(409).json({ error: "Username already taken, you need to write another username" });
+            }
+
+            // If the username is not taken, proceed with user creation
+            bcrypt.genSalt(saltrounds, (err, salt) => {
+                bcrypt.hash(req.body.password, salt, (err, hash) => {
+                    // Your database query to insert the new user
+                    db.query(
+                        `INSERT INTO accounts (username, password) VALUES ("${req.body.username}", "${hash}")`,
+                        function (err, results) {
+                            if (!err) {
+                                res.status(201).json({ message: "User created successfully." });
+                            } else {
+                                console.log(err);
+                                res.status(409).json({ error: "Internal Server Error" });
+                            }
+                        }
+                    );
+                });
+            });
+        }
+    );
+});
+
 
 app.post('/post-sign-in', (req,res) =>{
     jwt.verify(req.cookies["token"], secret2, function(err, decoded) {
@@ -69,7 +86,7 @@ app.post('/post-sign-in', (req,res) =>{
         } 
         console.log("user can now post")
     })
-})
+});
 
 //post method for login 
 app.post('/test/login', (req, res) => {
@@ -136,30 +153,36 @@ app.post('/blockUser', (req, res) => {
     });
 });
 
-app.post('/post', (req, res) =>{
-        //query for inserting the posts value into table posts
-        let token;
-        try{
-         token = jwt.verify(req.cookies["token"],secret2)
-         console.log(token)
-        }
-        catch(err){
-            res.status(400).json({error: err})
-            return
-        }
-            db.query(
-                `INSERT INTO posts (content, username) VALUES ("${req.body.content}", "${token.username}")`,
-                function(err, results){
-                    if(!err){
-                        res.status(200).json({message: "Post created sucessfully."})
-                    }
-                    else{
-                        console.log(err);
-                        res.status(400).json({error:err.sqlMessage})
-                    }
-            })
-})
+app.post('/post', (req, res) => {
+    // Check if content and title are provided in the request body
+    if (!req.body.content || !req.body.title) {
+        res.status(400).json({ error: "Content and title are required." });
+        return;
+    }
 
+    let token;
+    try {
+        token = jwt.verify(req.cookies["token"], secret2);
+        console.log(token);
+    } catch (err) {
+        res.status(400).json({ error: err });
+        return;
+    }
+
+    // Use parameterized queries to prevent SQL injection
+    db.query(
+        'INSERT INTO posts (content, title, username) VALUES (?, ?, ?)',
+        [req.body.content, req.body.title, token.username],
+        function (err, results) {
+            if (!err) {
+                res.status(200).json({ message: "Post created successfully." });
+            } else {
+                console.log(err);
+                res.status(400).json({ error: err.sqlMessage });
+            }
+        }
+    );
+});
 // Route to get all posts
 app.get('/get-posts', (req, res) => {
     const query = 'SELECT * FROM posts';
@@ -174,16 +197,17 @@ app.get('/get-posts', (req, res) => {
     });
   });
 
-
 app.post('/addComment', (req, res) => {
     const postId = req.body.postId;
-    const commentText = req.body.commentText;
+    const commentText = req.body.content;
+    let token;
     try{
-        const token = jwt.verify(req.cookies["token"],secret2)
+        token = jwt.verify(req.cookies["token"],secret2)
         console.log(token)
     }
     catch(err){
         res.status(400).json({error: err})
+        console.log(err)
         return
     }
         // Check if the post exists
@@ -198,8 +222,8 @@ app.post('/addComment', (req, res) => {
             res.status(404).json({ error: 'Post not found' });
         } else {
             // Post exists, add comment
-            const addCommentQuery = 'INSERT INTO comments (post_id, content) VALUES (?, ?)';
-            db.query(addCommentQuery, [postId, commentText], (err) => {
+            const addCommentQuery = 'INSERT INTO comments (post_id, content, username ) VALUES (?, ?, ?)';
+            db.query(addCommentQuery, [postId, commentText, token.username], (err) => {
             if (err) {
                 console.error('Error adding comment: ', err);
                 res.status(500).json({ error: 'Internal Server Error' });
@@ -210,9 +234,27 @@ app.post('/addComment', (req, res) => {
         }
         }
     });
-  });
+});
+
+app.get('/get-comments/:post_id', (req, res) =>{
+    db.query(
+        `SELECT content, username FROM comments WHERE post_id = "${req.params.post_id}"`,
+        function(err, results){
+            if(err){
+              res.status(400).json({error:err.sqlMessage})
+            }
+            else if (results.length === 0){
+              console.log(results)
+              res.status(404).json({message: "Comment not found."})
+            } else {
+              res.status(200).json(results)
+              console.log(results)
+            }
+        }
+    )
+});
   
-//post geting a users username, bio, email and when the acccount was created
+//post getting a users username, bio, email and when the acccount was created
 app.get('/users/:user', (req, res) =>{
     console.log(req.params.user)
     db.query(
@@ -230,7 +272,7 @@ app.get('/users/:user', (req, res) =>{
             }
         }
     )
-})
+});
 
 app.put("/test/change", (req, res) => {
     console.log(req.cookies)
@@ -254,7 +296,7 @@ app.put("/test/change", (req, res) => {
             )
         })
     })
-})
+});
 
 app.delete("/delete/:user", (req, res) =>{
     try{
@@ -371,6 +413,7 @@ app.post('/like_post', async (req, res) => {
   
       if (!hasLiked) {
         // Update the database with the new like status
+
         await updateLikeStatus(user_id, post_id, true);
   
         // Insert a new row into user_post_likes
