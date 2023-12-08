@@ -15,15 +15,6 @@ export default function FetchAPI(){
        <div className="forum-container">
          <FetchLogin/>
        </div> 
-       <div className="account">
-       <div className="delete-container">
-        <Link to={"/FetchAccount"} className="my-account">My Account</Link>
-        <Link className="delete-text" to="/FetchDelete" style={{ textDecoration: "none"}}>Delete your account</Link>
-        </div>
-       <div className="logout-container">
-         <Link className="logout-text" to="/FetchLogOut" style={{ textDecoration: "none"}}>Log out</Link>
-        </div>
-       </div>
        <div className="sign-up-container">
           <h1>Har du inget konto?</h1>
           <Link className="register" to="/FetchCreate" style={{ textDecoration: "none"}}>Registrera dig</Link>

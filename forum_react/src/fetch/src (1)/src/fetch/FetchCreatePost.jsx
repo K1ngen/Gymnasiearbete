@@ -54,9 +54,7 @@ const CreatePost = () => {
   };
 
   return (
-    <div>
-      <NavBar></NavBar>
-      <h2>Create a Post</h2>
+    <div className='create-post-form'>
       <form onSubmit={handleSubmit}>
         <label htmlFor="title">Title:</label>
         <input

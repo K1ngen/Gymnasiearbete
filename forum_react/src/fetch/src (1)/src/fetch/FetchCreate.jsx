@@ -25,7 +25,8 @@ export default function FetchCreate(){
         )
         if(!res.ok){
             console.error(await res.text())
-            alert("Error")
+            console.log(res.status + "user already exist, write another username")
+            alert("user already exist, write another username")
         }
         else{
             alert("User created successfully!")

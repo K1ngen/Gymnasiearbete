@@ -1,11 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import CommentForm from './FetchComment'; // Assuming you have a CommentForm component
+
+import CommentForm from './FetchAddComment';
 import CreatePost from './FetchCreatePost';
 import { NavBar } from '../NavBar';
+import { useState } from 'react';
+import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import GetCommentContent from './FetchGetComments';
 
 export default function GetContent() {
-  const [data, setData] = useState(null);  
+  const [postData, setData] = useState(null);
+  const [commentsData, setCommentData] = useState(null);
   const [showCreatePost, setShowCreatePost] = useState(false);
+  const [selectedPost, setSelectedPost] = useState(null);
   const [showCommentForm, setShowCommentForm] = useState(false);
 
   useEffect(() => {
@@ -31,53 +37,63 @@ export default function GetContent() {
   }, []);
 
   const handleViewPost = (postId) => {
-    const post = data.find(item => item.post_id === postId);
+    const post = postData.find((item) => item.post_id === postId);
     setSelectedPost(post);
-    setShowCommentForm(false); // Hide the comment form when viewing a post
   };
+  
 
-  const handleToggleCommentForm = () => {
-    setShowCommentForm(!showCommentForm);
-  };
-
-  const handleCommentSubmit = (postId, newComment) => {
-    // Implement the logic to submit the comment for the given post to the backend
-    console.log(`Submitting comment for post ${postId}:`, newComment);
-    // You can make a fetch request to your backend API to handle comment submission
+  const handleCreateCommentClick = (postId) => {
+    setSelectedPost(postId);
+    setShowCommentForm(true);
   };
 
   const handleCreatePostClick = () => {
     setShowCreatePost(true);
   };
-
+   
   return (
     <div>
       <NavBar></NavBar>
-      {data ? (
-        
+      <div></div>
+      <div className="account">
+       </div>
+      {postData ? (
         <div className="post-container">
-          {data.map((item) => (
+          {postData.map((item) => (
             <div className="post" key={item.post_id}>
               <h1 className="title" onClick={() => handleViewPost(item.post_id)}>
                 {item.title}
               </h1>
               <p className="content">{item.content}</p>
-              <p className="likes">Likes: {item.likes}</p>
-              <p className="dislikes">Dislikes: {item.dislikes}</p>
-              <p className="post_id">{item.post_id}</p>
-              <h1 className='make-comment'>comment</h1>
+              <div className='like-stats'>
+               <p className="likes">Likes: {item.likes}</p>
+               <p className="dislikes">Dislikes: {item.dislikes}</p>
+              </div>
+              <div className="create-stuff">
+              <Link to={"/FetchGetComments/"} className='view-comment' state={{postId: item.post_id}}>View Comments</Link>
+             <div className="comment-form">
+              <Link to={"/FetchAddComment"} className='add-comment' state={{postId: item.post_id}}>Add a comment</Link>
+              </div>     
+              </div>
             </div>
+             
           ))}
+        
         </div>
       ) : (
         <p>Loading...</p>
-      )}
+      )}  
 
-      <h1 className='create-post' onClick={handleCreatePostClick}>test</h1>
-   
-      {showCreatePost && <CreatePost />}
+  
+       <div className="account">
+        <div className="delete-container">
+        <Link to={"/FetchDelete"} className="my-account">My Account</Link>
+        </div>
+         <Link to={"/FetchCreatePost"} className='create-post'  >Create a post</Link>
+      </div>
 
-      {/* ... other components ... */}
+
+      {/* ... other compon  ents ... */}
     </div>
   );
 }
