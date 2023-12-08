@@ -1,4 +1,5 @@
 const express = require("express");
+const bodyParser = require('body-parser');
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const cookieParser = require("cookie-parser");
@@ -9,7 +10,7 @@ const PORT = 8000
 
 const mysql = require("mysql2")
 const db = mysql.createConnection({
-    host: "192.168.1.222", //Förmodligen localhost för dig //10.1.1.222 databas anslunting för jobb hemifrån
+    host: "10.1.1.222", //Förmodligen localhost för dig //10.1.1.222 databas anslunting för jobb hemifrån
     user: "henjoh", //sql username
     password : '1qaz!QAZ2wsx@WSX', //sql password
     database : "henjoh", //sql databasnamnet,
@@ -17,6 +18,8 @@ const db = mysql.createConnection({
 
 const secret = "this is a super super long secret ideally done in environment variables";
 const secret2 = "this is a different but equally long secret which should also be ideally done in environment variables";
+
+app.use(bodyParser.json());
 
 app.use(cookieParser(secret));
 
@@ -27,6 +30,7 @@ app.use(
 );
 
 const cors = require("cors");
+const { type } = require("express/lib/response");
 
 app.use(cors({
  credentials : true,
@@ -298,31 +302,80 @@ app.put("/test/change", (req, res) => {
     })
 });
 
-app.delete("/delete/:user", (req, res) =>{
-    try{
-     const token = jwt.verify(req.cookies["token"],secret2)
-     console.log(token)
-    }
+app.delete("/delete", async (req, res) => {
+    const username = req.query.username; // Access the username from query parameters
+    const password = req.query.password; // Access the password from query parameters
 
-    catch(err) {
-     res.status(400).json({error: err})
-     return
+    try {
+        const token = jwt.verify(req.cookies["token"], secret2);
+        console.log("Token:", token);
+
+        // Ensure that the user making the request is the same as the one specified in the URL
+        if (token.username !== username) {
+            res.status(403).json({ error: "Unauthorized: You can only delete your own account." });
+            console.log("test")
+            return;
+        }
+
+        // Verify username and password
+        const userExists = await checkUserCredentials(username, password);
+
+        if (!userExists) {
+            console.log(userExists);
+            res.status(401).json({ error: "Invalid username or password." });
+            return;
+        }
+        
+        // Delete the user account
+        const deleteQuery = 'DELETE FROM accounts WHERE username = ?';
+        db.query(deleteQuery, [username], function (err, result) {
+            if (err) {
+                console.log(err);
+                res.status(500).json({ error: "Error deleting the account." });
+                return;
+            }
+
+            // Check if any rows were affected (account deleted successfully)
+            if (result.affectedRows > 0) {
+                res.status(200).json({ success: true, message: "Account deleted successfully." });
+            } else {
+                res.status(500).json({ error: "Account not found or could not be deleted." });
+            }
+        });
+         
+    } catch (err) {
+        res.status(400).json({ error: err.message });
     }
- 
-    db.query(
-        `DELETE FROM accounts WHERE username ="${req.params.user}"`,
-            function(err, result){
-               console.log(req.params.user)
-               if(err){
-                   res.status(400).json({error:err.sqlMessage})
-                }
-                else{
-                  res.status(200).json({message:"User deleted sucessfully"})
+});
+// Function to check user credentials
+async function checkUserCredentials(username, password) {
+    return new Promise((resolve) => {
+        db.query(
+            'SELECT * FROM accounts WHERE username = ?',
+            [username],            
+            function (err, results) {
+                if (err) {
+                    console.log(err)
+                    resolve(false); // Error in the query
+                } else if (results.length === 0) {
+                    resolve(false); // User not found
+                } else {
+                    const user = results[0];
+                    const storedPassword = user.password.toString('utf-8')                
+
+                    bcrypt.compare(password, storedPassword, function (err, match) {
+                        if (err) {
+                            resolve(false); // Error in bcrypt comparison
+                        } else {
+                            resolve(match);
+                        }
+                    });
                 }
             }
-        )
-    }
-)
+        );
+    });
+}
+
 
 app.post("/get_user", (req, res) => {
     db.query(
