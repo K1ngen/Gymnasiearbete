@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import viteLogo from '/vite.svg'
-import FetchAPI from './fetch/src (1)/src/FetchAPI'
+import LoginSignUp from './webpage/LoginSignup'
 import "./styles/forum.css"
 import"./styles/register.css"
 import './App.css'
@@ -8,9 +8,9 @@ import './App.css'
 
 function App() {
   return (
-    <>
-     <FetchAPI/>
-    </>
+    <div>
+      <LoginSignUp/>
+     </div>
   )
 }
 

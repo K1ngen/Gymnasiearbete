@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import GetCommentContent from './FetchGetComments';
-import { NavBar } from '../NavBar';
+import NavBar from '../../../../webpage/NavBar';
 
 const CommentForm = () => {
   const [commentContent, setCommentContent] = useState('');

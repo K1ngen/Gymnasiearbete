@@ -1,11 +1,11 @@
 
 import CommentForm from './FetchAddComment';
 import CreatePost from './FetchCreatePost';
-import { NavBar } from '../NavBar';
 import { useState } from 'react';
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import GetCommentContent from './FetchGetComments';
+import NavBar from '../../../../webpage/NavBar';
 
 export default function GetContent() {
   const [postData, setData] = useState(null);

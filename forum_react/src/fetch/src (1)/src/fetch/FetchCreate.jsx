@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavBar } from "../NavBar";
+
 export default function FetchCreate(){
     const [form, setForm] = useState({});
 
@@ -35,7 +35,6 @@ export default function FetchCreate(){
 
     return(
         <div className="sign-up">
-            <NavBar></NavBar>
             <>
             Signup:
                 <form onSubmit={handleSubmit}>
