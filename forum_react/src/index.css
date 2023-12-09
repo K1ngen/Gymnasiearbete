@@ -14,8 +14,7 @@ body {
 }
 
 nav {
- background-color: black; 
- width: 100vw;
+ grid-row: 2 / 2;
  padding: 0;
  margin: 0;
 }
@@ -25,12 +24,14 @@ header {
  display: flex;
  justify-content: center;
  align-items: center;
- flex-direction: column;
+ flex-direction: row;
  width: 100vw;
 }
 
 .icon {
-  width: 100px;  
+  position: relative;
+  right: 100px;
+  width: 200px;  
 }
 
 .login {
@@ -39,7 +40,7 @@ header {
  align-items: center;
  justify-content: center;
  position: absolute; 
- top: 125px;
+ top: 165px;
  left: 20px;
  right: 20px;
  height: 90px;
@@ -70,8 +71,13 @@ header {
 }
 
 nav {
- height: 20px;
- background-color: white;
+ height: 40px;
+ background-color: black;
+}
+
+.links a {
+ color: white;
+ text-decoration: none; 
 }
 
 
@@ -88,19 +94,38 @@ nav {
 }
 
 .login {
-  grid-row: 2 / 4;
-  grid-column: 1 / 4;
+  display: flex;
+  justify-content: center;
+  align-items: c;
+  grid-row: 3 / 4;
+  grid-column: 1 /4;
   background-color: #edede9;
   border: 10px black;
   padding: 100px;
-}
+  margin: 20px auto;
+  width: 100px;
+ } 
+
+ .login form {
+  width: 9; 
+  margin: 0px auto;  
+ } 
+
+ .no-account {
+  top: 10px;
+  display: flex; 
+  justify-content: center;
+  margin: 0px auto;
+  width: 305px;
+ }
+
 
 .no-account {
  display: flex;
  position: absolute;
  left: 20px;
  right: 20px;
- top: 455px;
+ top: 525px;
  justify-content: center;
  align-items: center;
  background-color: #edede9;
@@ -114,7 +139,7 @@ nav {
 
 .links {
  display: flex;
- gap: 20px;
+ gap: 100px;
  justify-content: center;
  text-decoration: none;
  flex-direction: row; 
@@ -136,4 +161,55 @@ footer h1 {
 .log-in-text {
  font-size: 20px;
  text-align: center; 
+}
+
+.register-icon {
+ position: relative;
+ left: 30px;
+ bottom: 4px;
+}
+
+.account {
+ display: flex; 
+ gap: 20px;
+ position: absolute;
+ left: 25px;
+ top: 60px; 
+}
+
+@media only screen and (min-width: 575px) {
+  .login {
+   display: flex; 
+   justify-content: center;
+   align-items: center;
+   margin: 20px auto;
+   width: 100px;
+  } 
+
+  .login form {
+   width: 9; 
+   margin: 0px auto;  
+  } 
+
+  .no-account {
+   display: flex; 
+   justify-content: center;
+   margin: 0px auto;
+   width: 305px;
+  }
+
+}
+
+@media only screen and (min-width: 876px) {
+  footer {
+   height: 150px;  
+   margin-bottom: 0px;
+   padding: 0px;
+   justify-content: end;
+   align-items: end;
+  }
+
+  .register-container {
+    display: flex; 
+  }
 }

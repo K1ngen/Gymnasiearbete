@@ -10,10 +10,6 @@ export default function Header () {
         <img className = "register-icon" src={person} alt="" />
        <Link className="register" to="../FetchCreate" style={{ textDecoration: 'none'}} >Registera dig här</Link>   
        </div>        
-       <div className="links">
-       <Link to="./LoginSignup" textDecoration="none">Home</Link> 
-       <Link to="../FetchGetPosts">Post</Link>
-       </div>   
       </header>
      </>
   )  

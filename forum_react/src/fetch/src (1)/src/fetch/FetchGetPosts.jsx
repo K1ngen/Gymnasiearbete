@@ -6,6 +6,8 @@ import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import GetCommentContent from './FetchGetComments';
 import NavBar from '../../../../webpage/NavBar';
+import Header from '../../../../webpage/header';
+import "./styles/post.css"
 
 export default function GetContent() {
   const [postData, setData] = useState(null);
@@ -53,6 +55,7 @@ export default function GetContent() {
    
   return (
     <div>
+      <Header></Header>
       <NavBar></NavBar>
       <div></div>
       <div className="account">
@@ -64,7 +67,8 @@ export default function GetContent() {
               <h1 className="title" onClick={() => handleViewPost(item.post_id)}>
                 {item.title}
               </h1>
-              <p className="content">{item.content}</p>
+              <p className='created-by'>post by: {item.username}</p>
+              <p className="content"> {item.content}</p>
               <div className='like-stats'>
                <p className="likes">Likes: {item.likes}</p>
                <p className="dislikes">Dislikes: {item.dislikes}</p>

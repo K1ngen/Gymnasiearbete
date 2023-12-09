@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
+import NavBar from '../../../../webpage/NavBar';
+import Footer from '../../../../webpage/footer';
+import Header from '../../../../webpage/header';
+import "./styles/post.css"
+
 
 const CreatePost = () => {
  const navigate = useNavigate();
@@ -53,6 +58,9 @@ const CreatePost = () => {
   };
 
   return (
+    <>
+    <Header></Header>
+    <NavBar></NavBar>
     <div className='create-post-form'>
       <form onSubmit={handleSubmit}>
         <label htmlFor="title">Title:</label>
@@ -61,6 +69,7 @@ const CreatePost = () => {
           id="title"
           name="title"
           value={postData.title}
+          placeholder='title for your post'
           onChange={handleChange}
           required
         />
@@ -70,6 +79,7 @@ const CreatePost = () => {
           id="content"
           name="content"
           value={postData.content}
+          placeholder='content for your post'
           onChange={handleChange}
           required
         />
@@ -77,6 +87,8 @@ const CreatePost = () => {
         <button type="submit">Create Post</button>
       </form>
     </div>
+    <Footer></Footer>
+    </>
   );
 };
 
