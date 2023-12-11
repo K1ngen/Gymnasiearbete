@@ -8,6 +8,16 @@
  border-bottom: 20px solid gray;
 }
 
+.comments-content {
+ display: grid;
+ grid-template-columns: repeat(4, 1fr);
+ grid-template-rows: repeat(3, 1fr);
+ background-color: lightgray;
+ border: 1px solid gray;
+ width: 100%;
+ border-bottom: 20px solid gray; 
+}
+
 .title {
  grid-row: 1 / 1;
  text-align: center;
@@ -46,6 +56,15 @@
  align-self: center;
  margin-left: 15px;
  justify-self: end;
+}
+
+.post-title {
+ width: 100%;
+ text-align: center; 
+ margin-top: 0px;
+ position: fixed;
+ background-color: white;
+ top: 0px;
 }
 
 @media only screen and (min-width: 385px) {

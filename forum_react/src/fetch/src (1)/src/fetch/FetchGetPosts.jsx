@@ -42,16 +42,6 @@ export default function GetContent() {
     const post = postData.find((item) => item.post_id === postId);
     setSelectedPost(post);
   };
-  
-
-  const handleCreateCommentClick = (postId) => {
-    setSelectedPost(postId);
-    setShowCommentForm(true);
-  };
-
-  const handleCreatePostClick = () => {
-    setShowCreatePost(true);
-  };
    
   return (
     <div>
@@ -75,10 +65,8 @@ export default function GetContent() {
               </div>
               <div className="create-stuff">
               <Link to={"/FetchGetComments/"} className='view-comment' state={{postId: item.post_id}}>View Comments</Link>
-             <div className="comment-form">
               <Link to={"/FetchAddComment"} className='add-comment' state={{postId: item.post_id}}>Add a comment</Link>
               </div>     
-              </div>
             </div>
              
           ))}

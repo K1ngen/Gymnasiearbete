@@ -1,0 +1,44 @@
+nav {
+ position: sticky;
+ top: 0px;   
+}
+
+.comments-content {
+ display: grid;
+ grid-template-columns: repeat(5, 5fr);
+ grid-template-columns: repeat(5, 5fr);
+}
+
+.Author {
+ grid-row: 1;   
+ grid-column: 2 / 4;   
+ justify-self: center; 
+ align-self: center;
+}
+
+.title {
+ justify-self: center; 
+ align-self: center;
+ grid-row: 2;   
+ grid-column: 2 / 4;   
+}
+
+.post-title {
+ position: sticky;
+ top: 0px;   
+}
+
+footer {
+ position: sticky;
+ bottom: 0px;
+ left: 0;
+ right: 0;   
+}
+
+@media only screen and (min-width: 600px) {
+  .comments-content {
+   width: 500px;
+   margin: 0px auto; 
+   margin-top: 10px;
+  }
+}

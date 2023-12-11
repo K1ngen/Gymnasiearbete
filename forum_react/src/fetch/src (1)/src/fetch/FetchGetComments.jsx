@@ -1,77 +1,96 @@
 
 import CommentForm from './FetchAddComment';
+import GetPostContent from './FetchGetPost';
 import CreatePost from './FetchCreatePost';
 import { useState } from 'react';
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import './styles/comment.css'
+import NavBar from '../../../../webpage/NavBar';
+import Footer from '../../../../webpage/footer';
 
 export default function GetCommentContent() {
-  const [commentData, setData] = useState(null);
-  const [commentsData, setCommentData] = useState(null);
-  const [showCreateComment, setShowCreateComment] = useState(false);
-  const [selectedComment, setSelectedComment] = useState(null);
+  const [commentData, setCommentData] = useState(null);
+  const [postDetails, setPostDetails] = useState(null);
   const [showCommentForm, setShowCommentForm] = useState(false);
-   
+
   let { state } = useLocation();
-  console.log(state.postId)
   let postId = state.postId;
+  let postTitle = state.postTitle;
+
+  console.log(postTitle)
 
   useEffect(() => {
-    async function getComment(postId) {
+    async function fetchData() {
       try {
-        const res = await fetch(`http://127.0.0.1:8000/get-comments/${postId}`, {
+        // Fetch comments
+        const commentsResponse = await fetch(`http://127.0.0.1:8000/get-comments/${postId}`, {
           credentials: 'include',
         });
 
-        if (!res.ok) {
-          const err = await res.text();
+        if (!commentsResponse.ok) {
+          const err = await commentsResponse.text();
           console.error(err);
         } else {
-          const promised_data = await res.json();
-          console.log("test")
-          setData(promised_data);
+          const commentsData = await commentsResponse.json();
+          setCommentData(commentsData);
+        }
+
+        // Fetch post details
+        const postResponse = await fetch(`http://127.0.0.1:8000/post/${postId}`, {
+          credentials: 'include',
+        });
+
+        if (!postResponse.ok) {
+          const err = await postResponse.text();
+          console.error(err);
+        } else {
+          const postDetails = await postResponse.json();
+          setPostDetails(postDetails);
         }
       } catch (error) {
-        console.error('Error fetching posts:', error);
+        console.error('Error fetching data:', error);
       }
     }
 
-    getComment(postId);
-  }, []);
+    fetchData();
+  }, [postId]);
 
   const handleViewComment = (commentId) => {
     const comment = commentData.find((item) => item.comment_id === commentId);
     setSelectedComment(comment);
   };
-  
 
-  const handleCreateCommentClick = (commentId) => {
-    setSelected(commentId);
-    setShowCommentForm(true);
-  };
+  const handleViewPostTitle = (post_id) =>{
+    const post = postDetails.find((item) => item.post_id === post_id);
+    setPostDetails(post);
+  }
 
   return (
+    <>
+    <NavBar></NavBar>
+    <GetPostContent></GetPostContent>
     <div>
-      <p>Comments</p>
       {commentData ? (
         <div className="comment-container">
           {commentData.map((item) => (
             <div className="comments-content" key={item.comment_id}>
-              <h1>author: {item.username}</h1>
-              <h1 className="title" onClick={() => handleViewComment(item.comment_id)}> 
-               content: {item.content}
+              <h1 className='Author'>Author: {item.username}</h1>
+              <h1 className="title" >
+                Content: {item.content}
               </h1>
             </div>
           ))}
-          <div className="comments-container">
-
-          </div>
         </div>
+        
       ) : (
         <p>Loading...</p>
-      )}  
+      )}
 
-      {/* ... other components ... */}
+      
+      
     </div>
+    <Footer></Footer>
+     </>
   );
-}
+} 

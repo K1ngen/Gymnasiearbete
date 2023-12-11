@@ -9,7 +9,6 @@
 }
 
 body {
- background-color: white;   
  margin: 0;
 }
 
@@ -64,10 +63,10 @@ header {
 }
 
 .forum-container {
-  height: 98vh; 
-  width: 10px;
-  align-items: center;
-  justify-self: center;
+ height: 98vh; 
+ width: 10px;
+ align-items: center;
+ justify-self: center;
 }
 
 nav {
@@ -119,7 +118,6 @@ nav {
   width: 305px;
  }
 
-
 .no-account {
  display: flex;
  position: absolute;
@@ -146,6 +144,8 @@ nav {
 }
 
 footer {
+ position: absolute;
+ bottom: 0; 
  align-self: end;
  background-color: black; 
  margin-bottom: 0;
